@@ -30,37 +30,22 @@ int positions[] = {closedPos,closedPos,closedPos};
 
 void setup() { 
   Serial.begin(9600);
+
+  delay(1000);
   
+  // Initialise the servos. Write the closed pos to the servos and attach.
   for (int j=0; j < numberOfServos; j++) {
       // set to initial positions.
     servos[j].write(positions[j]);
+    servos[j].attach(pins[j]);
   }
   
   delay(1000);
-  
-  for (int i=0; i < numberOfServos; i++) {
-    servos[i].attach(pins[i]);
-  }
-  
-  delay(1000);
-  
+
+  // Detach the servos. They make a noise whilst attached, even when we're not writing.
   for (int h=0; h < numberOfServos; h++) {
     servos[h].detach();
   }
-}
-
-void loopx() {
-  for (int i=0; i < numberOfServos; i++) {
-     servos[i].write(closedPos);
-  }
-  
-  delay(2000);
-  
-  for (int j=0; j < numberOfServos; j++) {
-      // set to initial positions.
-    servos[j].detach();
-  }
-  
 }
 
 void loop() {
@@ -112,6 +97,7 @@ void loop() {
   logState();
 }
 
+// Dump useful state nuggets to the Serial monitor
 void logState(){
   
   if (millis() - lastLogTime < 500){
@@ -130,3 +116,16 @@ void logState(){
   Serial.println("");
 }
 
+// not called, use me to test out servo positions.
+void testLoop() {
+  for (int i=0; i < numberOfServos; i++) {
+     servos[i].write(closedPos);
+  }
+  
+  delay(2000);
+  
+  for (int j=0; j < numberOfServos; j++) {
+      // set to initial positions.
+    servos[j].detach();
+  }
+}
