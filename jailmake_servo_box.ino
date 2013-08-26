@@ -1,8 +1,5 @@
 /*
-Open 3 boxes with 3 servos 
-unsigned long startLoop = millis();
-unsigned long openDuration = 2000;
-unsigned long closedDuration = 2000;
+Open 3 boxes with 3 servos
 */
 #include <Servo.h>
 
@@ -26,29 +23,44 @@ Servo s2;
 Servo s3;
 Servo servos[] = {s1, s2, s3};
 
-int numberOfServos = 2;
+int numberOfServos = 1;
 
 int pins[] = {9,10,11};
 int positions[] = {closedPos,closedPos,closedPos};
 
 void setup() { 
   Serial.begin(9600);
-  for (int i=0; i < numberOfServos; i++) {
-    servos[i].attach(pins[i]);
-  }
-  // pause for 1s before we begin.
-  delay(1000);
+  
   for (int j=0; j < numberOfServos; j++) {
       // set to initial positions.
     servos[j].write(positions[j]);
   }
-  delay(2000);
+  
+  delay(1000);
+  
+  for (int i=0; i < numberOfServos; i++) {
+    servos[i].attach(pins[i]);
+  }
+  
+  delay(1000);
+  
+  for (int h=0; h < numberOfServos; h++) {
+    servos[h].detach();
+  }
 }
 
 void loopx() {
   for (int i=0; i < numberOfServos; i++) {
      servos[i].write(closedPos);
   }
+  
+  delay(2000);
+  
+  for (int j=0; j < numberOfServos; j++) {
+      // set to initial positions.
+    servos[j].detach();
+  }
+  
 }
 
 void loop() {
@@ -57,13 +69,18 @@ void loop() {
   
   if (startCycle == 0){
     startCycle = now;
+    servos[currentServo].attach(pins[currentServo]);
   }
   
   elapsedTime = now - startCycle;
   
   // write the current position to each servo.
   for (int i=0; i < numberOfServos; i++) {
-    servos[i].write(constrain(positions[i], openPos, closedPos));
+    int pos = constrain(positions[i], openPos, closedPos);
+    // avoid sending a signal to a servo in the closed position to reduce the noise when servos aren't doing useful work.
+    if (pos != closedPos) {
+       servos[i].write(pos);
+    }
   }
  
   // unpdate the postions for next pass
@@ -80,12 +97,15 @@ void loop() {
     positions[currentServo] = map(t, 0, closeDuration, closedPos, openPos);
   
   } else if (elapsedTime <= (openDuration + pauseWhileOpen + closeDuration + pauseBeforeNext)){
-    // holding open
+    // holding closed
+    servos[currentServo].detach();
     
   } else {
     // we've done a loop, move to next servo, reset the startCycle
     currentServo = (currentServo + 1) % numberOfServos;
     startCycle = 0;
+    
+    servos[currentServo].attach(pins[currentServo]);
   }
   
   delay(loopDelay);
